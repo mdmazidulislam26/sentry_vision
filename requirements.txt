@@ -1,0 +1,7 @@
+ultralytics
+opencv-python-headless
+face_recognition
+streamlit
+pyngrok
+pandas
+numpy
