@@ -20,7 +20,7 @@ Running face recognition on every single frame is both wasteful and inconsistent
 ## 🏗️ Architecture
 
 ```
-┌─────────────┐     ┌──────────┐     ┌──────────────┐     ┌────────────────┐
+┌─────────────┐     ┌──────────┐     ┌──────────────┐     ┌─────────────────┐
 │ Video Frame │ --> │  YOLOv8  │ --> │  ByteTrack   │ --> │ face_recognition│
 │             │     │ (person) │     │ (track IDs)  │     │ (per new track) │
 └─────────────┘     └──────────┘     └──────────────┘     └────────┬────────┘
@@ -157,9 +157,3 @@ print(f"Dashboard live at: {public_url}")
 - Add authentication to the API/dashboard before exposing it beyond a local demo
 - Move `/process-video` off the request/response cycle and onto a background task queue (Celery/RQ) — it's synchronous today, matching the Streamlit app's behavior, which doesn't scale to large videos or concurrent requests
 - Push the built image to a registry and deploy it on a persistent host (e.g. Render, as used for the RetainIQ churn-api) instead of only build-checking it in CI
-
----
-
-## 🙋 About
-
-Built as part of a structured AI/ML engineering transition (from a MERN/Java backend background) — the Computer Vision project in a 5-week fast-track covering RAG pipelines, agentic AI, and computer vision, extended here into a full applied system (detection + tracking + recognition + business logic + dashboard).
