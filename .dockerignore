@@ -1,0 +1,15 @@
+.git/
+.github/
+notebooks/
+tests/
+data/
+*.db
+*.pkl
+*.pt
+outputs/
+alerts/
+debug_face_crops/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+README.md

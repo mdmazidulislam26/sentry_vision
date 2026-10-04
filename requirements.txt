@@ -5,3 +5,6 @@ streamlit
 pyngrok
 pandas
 numpy
+fastapi
+uvicorn[standard]
+python-multipart

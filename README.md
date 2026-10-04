@@ -58,8 +58,11 @@ Running face recognition on every single frame is both wasteful and inconsistent
 - **Tracking**: ByteTrack (via `ultralytics`' built-in `model.track()`)
 - **Recognition**: `face_recognition` (dlib-based face encoding + matching)
 - **Storage**: SQLite (attendance/alerts), pickle (known-face encodings)
-- **Frontend**: Streamlit
-- **Deployment**: ngrok (Colab-hosted public tunnel)
+- **Frontend**: Streamlit (interactive dashboard)
+- **API**: FastAPI (programmatic access to the same pipeline)
+- **Containerization**: Docker
+- **CI**: GitHub Actions — test suite + Docker build check on every push
+- **Interactive deployment**: ngrok (Colab-hosted public tunnel)
 
 ---
 
@@ -69,17 +72,25 @@ Running face recognition on every single frame is both wasteful and inconsistent
 sentry_vision/
 ├── src/
 │   └── sentryvision/
-│       ├── __init__.py       # package public API
+│       ├── __init__.py       # package docs — deliberately does NOT eager-import submodules
 │       ├── config.py          # paths & tunable constants, single source of truth
-│       ├── database.py        # SQLite schema + data access
+│       ├── database.py        # SQLite schema + data access (pure stdlib)
 │       ├── faces.py           # known-face encoding storage & matching
-│       └── pipeline.py        # core detect -> track -> recognize -> log pipeline
+│       ├── pipeline.py        # core detect -> track -> recognize -> log pipeline
+│       └── api.py             # FastAPI endpoints wrapping the pipeline
 ├── app.py                      # Streamlit UI — thin layer, imports all logic from src/
+├── tests/
+│   ├── test_database.py        # pure-logic tests, no CV deps needed
+│   └── test_faces.py           # matching logic tested against synthetic encodings
 ├── notebooks/
 │   └── sentry_vision_exploration.ipynb   # dev journey: baseline -> tracking -> recognition -> integration
 ├── data/
 │   └── known_faces/            # known-person reference photos (gitignored; populated at runtime)
+├── .github/workflows/ci.yml    # test suite + Docker build check on every push
+├── Dockerfile
+├── .dockerignore
 ├── requirements.txt
+├── requirements-dev.txt        # + pytest/httpx, kept out of the Docker image
 ├── .gitignore
 └── README.md
 ```
@@ -143,9 +154,9 @@ print(f"Dashboard live at: {public_url}")
 
 - Replace SQLite with Postgres/MySQL for concurrent multi-camera writes
 - Move face-encoding storage from a local pickle to a proper vector index (e.g. FAISS) as the known-faces list grows
-- Add authentication to the dashboard before exposing it beyond a local demo
-- Containerize (`Dockerfile`) and deploy on a persistent host instead of a Colab + ngrok tunnel
-- Add a lightweight test suite around `database.py` and `faces.py` (pure-logic modules, no video I/O needed to test)
+- Add authentication to the API/dashboard before exposing it beyond a local demo
+- Move `/process-video` off the request/response cycle and onto a background task queue (Celery/RQ) — it's synchronous today, matching the Streamlit app's behavior, which doesn't scale to large videos or concurrent requests
+- Push the built image to a registry and deploy it on a persistent host (e.g. Render, as used for the RetainIQ churn-api) instead of only build-checking it in CI
 
 ---
 

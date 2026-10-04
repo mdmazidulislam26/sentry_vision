@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      # NOTE: this install compiles dlib from source (face_recognition's backend),
+      # which has no prebuilt wheel for every platform/Python combo — expect this
+      # step to take several minutes, especially on a cold pip cache.
+      - name: Install system dependencies for dlib
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake libopenblas-dev liblapack-dev
+
+      - name: Install Python dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t sentryvision:ci .
